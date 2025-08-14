@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Mini Cozy Survival</title>
+<style>
+  :root{
+    --bg:#0b0f14;         /* cozy night */
+    --ink:#e7f2ff;        /* soft pixel ink */
+    --muted:#9fb3c8;
+    --acc1:#7ef2c4;       /* minty highlight */
+    --acc2:#ffd884;       /* warm highlight */
+    --danger:#ff7b7b;
+    --ok:#7bff9d;
+    --card:#131a22;
+    --edge:#0a0e13;
+  }
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    letter-spacing: .3px;
+    image-rendering: pixelated;
+    -webkit-font-smoothing: none; text-rendering: optimizeSpeed;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .wrap{ width:min(720px, 100%); padding:12px;}
+  .title{
+    text-align:center; font-weight:900; font-size:22px; line-height:1;
+    text-shadow: 0 2px 0 #000;
+    margin-bottom:10px;
+  }
+  .grid{
+    display:grid; gap:8px;
+    grid-template-columns: 1fr;
+  }
+  .card{
+    background:linear-gradient(#151d27,#0f151c);
+    border:3px solid var(--edge);
+    box-shadow: 0 0 0 2px #000, 0 6px 0 #0008;
+    border-radius:8px;
+    padding:10px;
+  }
+  .stats{display:grid; grid-template-columns: repeat(2,1fr); gap:8px;}
+  .bar{
+    background:#0b1117; border:2px solid #000; border-radius:6px; padding:6px;
+    box-shadow: inset 0 0 0 2px #0006;
+    font-size:12px;
+  }
+  .bar .row{display:flex; justify-content:space-between; margin-bottom:4px;}
+  .meter{
+    height:8px; background:#091017; border:2px solid #000; border-radius:4px;
+    overflow:hidden;
+  }
+  .meter span{display:block; height:100%; width:50%; background:linear-gradient(90deg, var(--acc1), var(--acc2));}
+  .caps{font-weight:800; text-transform:uppercase; font-size:11px; letter-spacing:1px; color:var(--muted);}
+  .big{font-size:14px; font-weight:800;}
+  .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  .btn{
+    flex:1 1 auto;
+    padding:12px 10px; font-weight:800; font-size:14px;
+    background:linear-gradient(#1b2633,#121923);
+    border:3px solid #000; border-radius:10px;
+    box-shadow: 0 4px 0 #0008;
+    color:var(--ink); text-align:center; cursor:pointer; user-select:none;
+  }
+  .btn:active{ transform: translateY(2px); box-shadow: 0 2px 0 #0008;}
+  .btn.ok{border-color:#003a1a}
+  .btn.warn{border-color:#3a0000}
+  .btn.small{padding:8px 10px; font-size:12px}
+  .pill{display:inline-block; padding:2px 8px; border:2px solid #000; border-radius:999px; font-weight:900; font-size:11px;}
+  .pill.win{background:#0f2; color:#001b00}
+  .pill.lose{background:#f33; color:#220000}
+  .log{
+    height:140px; overflow:auto; background:#0b1117; border:2px solid #000; border-radius:6px; padding:8px;
+    font-size:13px; line-height:1.3;
+  }
+  .log p{margin:0 0 6px 0}
+  .inv{display:grid; grid-template-columns: repeat(3,1fr); gap:6px; font-size:13px}
+  .inv .it{background:#0b1117; border:2px solid #000; border-radius:6px; padding:6px;}
+  .split{display:grid; gap:8px; grid-template-columns: 1fr}
+  @media (min-width:680px){
+    .split{grid-template-columns: 1fr 1fr;}
+  }
+  .footer{opacity:.7; text-align:center; font-size:11px; margin-top:6px}
+  .link{color:var(--acc1); text-decoration:underline; cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title">🌲 MINI COZY SURVIVAL — <span id="day">Day 1</span></div>
+  <div class="grid">
+    <div class="split">
+      <div class="card">
+        <div class="stats">
+          <div class="bar" id="healthBar">
+            <div class="row"><span class="caps">Health</span><span class="big" id="hpTxt">100</span></div>
+            <div class="meter"><span id="hpMeter"></span></div>
+          </div>
+          <div class="bar" id="energyBar">
+            <div class="row"><span class="caps">Energy</span><span class="big" id="enTxt">80</span></div>
+            <div class="meter"><span id="enMeter"></span></div>
+          </div>
+          <div class="bar">
+            <div class="row"><span class="caps">Hunger</span><span class="big" id="huTxt">20</span></div>
+            <div class="meter"><span id="huMeter"></span></div>
+          </div>
+          <div class="bar">
+            <div class="row"><span class="caps">Thirst</span><span class="big" id="thTxt">20</span></div>
+            <div class="meter"><span id="thMeter"></span></div>
+          </div>
+          <div class="bar">
+            <div class="row"><span class="caps">Warmth</span><span class="big" id="wmTxt">50</span></div>
+            <div class="meter"><span id="wmMeter"></span></div>
+          </div>
+          <div class="bar">
+            <div class="row"><span class="caps">Shelter</span><span class="big" id="shTxt">0</span></div>
+            <div class="meter"><span id="shMeter"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="caps">Inventory</div>
+        <div class="inv" id="inv"></div>
+        <div class="row" style="margin-top:8px">
+          <div class="btn small" id="saveBtn">💾 Save</div>
+          <div class="btn small" id="loadBtn">📦 Load</div>
+          <div class="btn small warn" id="newBtn">🧹 New Run</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="caps">Actions (each uses part of the day)</div>
+      <div class="row" style="margin-top:6px">
+        <div class="btn" data-act="forage">🍓 Forage</div>
+        <div class="btn" data-act="water">💧 Gather Water</div>
+        <div class="btn" data-act="rest">🛌 Rest</div>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <div class="btn" data-act="explore">🧭 Explore</div>
+        <div class="btn" data-act="craft">🛠️ Craft</div>
+        <div class="btn" data-act="cook">🔥 Use Campfire</div>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <div class="btn ok" data-act="endday">🌙 End Day</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="caps">Journal</div>
+      <div class="log" id="log"></div>
+    </div>
+
+    <div class="card">
+      <div class="caps">Crafting</div>
+      <div class="row" style="margin-top:6px">
+        <div class="btn small" data-craft="campfire">🔥 Campfire (Wood x4, Stone x2)</div>
+        <div class="btn small" data-craft="spear">🪓 Spear (Wood x2, Stone x1)</div>
+        <div class="btn small" data-craft="shelter">🏕️ Shelter (Wood x6, Cloth x1)</div>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <div class="btn small" data-craft="boil">♨️ Boil Water (Dirty→Clean)</div>
+        <div class="btn small" data-craft="cookBerries">🍲 Cook Berries (+Food)</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Survive 10 days to win. If <span class="pill lose">Health 0</span> — game over. Cozy pixel vibes only ✨
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const el = id => document.getElementById(id);
+  const logEl = el('log');
+
+  const state = {
+    day: 1,
+    hp: 100,
+    energy: 80,
+    hunger: 20,   // 0 good → 100 starving
+    thirst: 20,   // 0 good → 100 parched
+    warmth: 50,
+    shelter: 0,
+    hasCampfire: false,
+    items: {
+      Wood: 2, Stone: 0, Berries: 1, "Water (Dirty)": 0, "Water (Clean)": 1, Cloth: 0, Food: 0
+    },
+    crafted: { spear:false },
+    turns: 0, // turns taken today (max 4 per day)
+  };
+
+  const MAX_TURNS = 4;
+  const WIN_DAY = 10;
+
+  // ==== UI ====
+  function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+  function pct(v,max=100){return clamp(v,0,100);}
+  function setMeter(id,value){
+    el(id).style.width = pct(value)+'%';
+  }
+  function draw(){
+    el('day').textContent = 'Day ' + state.day;
+    el('hpTxt').textContent = Math.round(state.hp);
+    el('enTxt').textContent = Math.round(state.energy);
+    el('huTxt').textContent = Math.round(state.hunger);
+    el('thTxt').textContent = Math.round(state.thirst);
+    el('wmTxt').textContent = Math.round(state.warmth);
+    el('shTxt').textContent = Math.round(state.shelter);
+
+    setMeter('hpMeter',state.hp);
+    setMeter        .`);
+      } else {
+        log("🔥 You sat by the campfire and warmed up, but had nothing to cook.");
+      }
+      draw();
+    },
+    endday(){
+      // Sleep / day change
+      state.day++;
+      state.turns = 0;
+      // overnight hunger/thirst/warmth loss
+      hungerThirstTick(10, 12);
+      state.energy = clamp(state.energy + 15, 0, 100);
+      if (state.shelter > 0) {
+        state.warmth = clamp(state.warmth + 10, 0, 100);
+      } else {
+        state.warmth = clamp(state.warmth - 5, 0, 100);
+      }
+      log(`🌙 You rest for the night. A new day dawns.`);
+      if (state.day > WIN_DAY) {
+        log(`<span class="pill win">🏆 You survived ${WIN_DAY} days! You win!</span>`);
+      }
+      draw();
+      checkGameOver();
+    }
+  };
+
+  // ==== Crafting ====
+  const crafting = {
+    campfire(){
+      if (useItem('Wood',4) && useItem('Stone',2)){
+        state.hasCampfire = true;
+        log('🔥 You built a campfire.');
+      } else {
+        log('❌ Not enough resources for a campfire.');
+      }
+      draw();
+    },
+    spear(){
+      if (useItem('Wood',2) && useItem('Stone',1)){
+        state.crafted.spear = true;
+        log('🪓 You crafted a spear.');
+      } else {
+        log('❌ Not enough resources for a spear.');
+      }
+      draw();
+    },
+    shelter(){
+      if (useItem('Wood',6) && useItem('Cloth',1)){
+        state.shelter = 100;
+        log('🏕️ You built a shelter.');
+      } else {
+        log('❌ Not enough resources for shelter.');
+      }
+      draw();
+    },
+    boil(){
+      if (useItem('Water (Dirty)',1)){
+        gainItem('Water (Clean)',1);
+        log('♨️ You boiled dirty water into clean water.');
+      } else {
+        log('❌ No dirty water to boil.');
+      }
+      draw();
+    },
+    cookBerries(){
+      if (useItem('Berries',2)){
+        gainItem('Food',1);
+        log('🍲 Cooked berries into a meal.');
+      } else {
+        log('❌ Need at least 2 berries to cook.');
+      }
+      draw();
+    }
+  };
+
+  // ==== Random events ====
+  function maybeEvent(){
+    if (chance(0.15)){
+      const roll = randomInt(1,3);
+      if (roll===1){
+        log('🌧 It rained, your warmth dropped a bit.');
+        state.warmth = clamp(state.warmth - 5,0,100);
+      }
+      if (roll===2){
+        log('🐍 You startled a snake and lost some health.');
+        state.hp = clamp(state.hp - 5,0,100);
+      }
+      if (roll===3 && state.crafted.spear){
+        log('🦌 You used your spear to catch some meat (+Food x1).');
+        gainItem('Food',1);
+      }
+    }
+  }
+
+  // ==== Game Over check ====
+  function checkGameOver(){
+    if (state.hp <= 0){
+      log(`<span class="pill lose">💀 You died. Game Over.</span>`);
+      document.querySelectorAll('.btn').forEach(b=>b.onclick=null);
+    }
+  }
+
+  // ==== Save/Load ====
+  function saveGame(){
+    localStorage.setItem('cozySurvival', JSON.stringify(state));
+    log('💾 Game saved.');
+  }
+  function loadGame(){
+    const data = localStorage.getItem('cozySurvival');
+    if (data){
+      Object.assign(state, JSON.parse(data));
+      log('📦 Game loaded.');
+      draw();
+    } else {
+      log('⚠️ No saved game found.');
+    }
+  }
+  function newGame(){
+    localStorage.removeItem('cozySurvival');
+    location.reload();
+  }
+
+  // ==== Bind UI ====
+  document.querySelectorAll('[data-act]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const act = btn.dataset.act;
+      actions[act]();
+      checkGameOver();
+    });
+  });
+  document.querySelectorAll('[data-craft]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const c = btn.dataset.craft;
+      crafting[c]();
+      checkGameOver();
+    });
+  });
+  el('saveBtn').onclick = saveGame;
+  el('loadBtn').onclick = loadGame;
+  el('newBtn').onclick = newGame;
+
+  draw();
+  log('🏕️ Welcome to Mini Cozy Survival! Try to last 10 days.');
+})();
+</script>
+</body>
+</html>
